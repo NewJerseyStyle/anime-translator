@@ -1,8 +1,13 @@
 # anime-translator
 Applying deep learning to translate animation and re-generate audio.
 
-[![YouTube Demo](https://img.youtube.com/vi/Rl5Z85zWLgk/0.jpg)](https://youtu.be/Rl5Z85zWLgk)
-Click to view [Demo video on YouTube](https://youtu.be/Rl5Z85zWLgk)
+Supported output languages:
+| Chinese (Mandarin) | Japanese | English |
+|-|-|-|
+
+|[![YouTube Demo](https://img.youtube.com/vi/Rl5Z85zWLgk/0.jpg)](https://youtu.be/Rl5Z85zWLgk)|
+|-|
+|Click to view [Demo video (Japanese to Chinese) on YouTube](https://youtu.be/Rl5Z85zWLgk)|
 
 ## Usage
 Input video and translate it to Chinese (Mandarin):
@@ -15,10 +20,6 @@ Input video, subtitle file (`*.srt`) and translate it to Chinese (Mandarin):
 python3 convert.py ~/Desktop/test.mp4 --srt ~/Desktop/test.srt --target_language Chinese
 ```
 > ⚠️ Parsing SRT file is on Todo list. This feature is not available.
-
-Supported languages:
-| Chinese (Mandarin) | Japanese | English |
-|-|-|-|
 
 ## Get started
 ```bash
