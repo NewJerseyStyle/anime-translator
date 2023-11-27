@@ -16,7 +16,7 @@ from translatepy import Translator
 from scipy.io.wavfile import write as write_wav
 from scipy.spatial.distance import hamming
 
-sys.path.append(os.path.join(sys.path[0], "gitmodules", "VALL-E-X"))
+sys.path.append(os.path.join(sys.path[0], "VALL-E-X"))
 from utils.generation import SAMPLE_RATE, generate_audio, preload_models
 from utils.prompt_making import make_prompt
 
