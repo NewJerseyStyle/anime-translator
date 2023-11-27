@@ -42,3 +42,4 @@ Credits to powerful tools made this repo possible:
 
 ## Known issues
 - `*.srt` file timeframe and generated audio timeframe alignment problem
+- it tries to sing during OP/ED
