@@ -1,5 +1,6 @@
 import os
 import gc
+import sys
 import argparse
 import tempfile
 from glob import glob
@@ -9,13 +10,15 @@ from moviepy.editor import *
 import demucs.separate
 import whisperx
 import torch
+import librosa
+import numpy as np
 from translatepy import Translator
-from utils.generation import SAMPLE_RATE, generate_audio, preload_models
-from utils.prompt_making import make_prompt
 from scipy.io.wavfile import write as write_wav
 from scipy.spatial.distance import hamming
-import numpy as np
-import librosa
+
+sys.path.append(os.path.join(sys.path[0], "gitmodules", "VALL-E-X"))
+from utils.generation import SAMPLE_RATE, generate_audio, preload_models
+from utils.prompt_making import make_prompt
 
 parser = argparse.ArgumentParser()
 parser.add_argument("video", help="path of the target video file", type=str)
