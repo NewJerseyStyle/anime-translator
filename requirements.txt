@@ -4,6 +4,8 @@ demucs
 pydub
 whisperx @ git+https://github.com/m-bain/whisperx.git
 translatepy
+scipy
+soundfile
 numpy
 torch==2.0.1
 torchvision==0.15.2
