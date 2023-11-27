@@ -5,6 +5,7 @@ pydub
 whisperx @ git+https://github.com/m-bain/whisperx.git
 translatepy
 scipy
+librosa
 soundfile
 numpy
 torch==2.0.1
