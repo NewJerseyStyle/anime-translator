@@ -1,0 +1,4 @@
+moviepy
+srt
+demucs
+pydub
