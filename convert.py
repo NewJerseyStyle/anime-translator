@@ -9,6 +9,7 @@ from pydub import AudioSegment
 from moviepy.editor import *
 import demucs.separate
 import whisperx
+import srt
 import torch
 import librosa
 import numpy as np
@@ -125,10 +126,14 @@ def main(args):
 
     audio_file = os.path.join(temp_dir.name, "test.wav")
 
+    if args.verbose:
+        print("Splitting video and audio")
     videoclip = VideoFileClip(args.video)
     audioclip = videoclip.audio
     audioclip.write_audiofile(audio_file)
     
+    if args.verbose:
+        print("Splitting vocals and background")
     demucs.separate.main(["--two-stems", "vocals",
                           "-o", os.path.join(temp_dir.name, separated),
                           "-n", "mdx_extra",
@@ -139,36 +144,49 @@ def main(args):
                   os.path.join(temp_dir.name,
                                os.path.basename(filename)))
 
-    if args.verbose:
-        print("Complex analyzing on audio data....")
+    if args.srt is None or len(args.srt) == 0:
+        if args.verbose:
+            print("AI finding sentences in audio....")
+
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        batch_size = args.whisperx_batch_size
+        compute_type = args.whisperx_compute_type if torch.cuda.is_available() else "float32"
     
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    batch_size = args.whisperx_batch_size
-    compute_type = args.whisperx_compute_type if torch.cuda.is_available() else "float32"
+        audio = whisperx.load_audio(audio_file)
+    
+        # 3. Assign speaker labels
+        diarize_model = whisperx.DiarizationPipeline(use_auth_token=args.hf_auth_token,
+                                                     device=device)
+    
+        # add min/max number of speakers if known
+        diarize_segments = diarize_model(audio)
+        # diarize_model(audio, min_speakers=min_speakers, max_speakers=max_speakers)
+    
+        # result = whisperx.assign_word_speakers(diarize_segments, result)
+        if args.verbose:
+            print(diarize_segments)
+        # print(result["segments"]) # segments are now assigned speaker IDs
+    
+        # delete model if low on GPU resources
+        del diarize_model
+        gc.collect()
+        torch.cuda.empty_cache()
 
-    audio = whisperx.load_audio(audio_file)
+        window_list = []
+        for sentence in diarize_segments["segment"]:
+            window_list.append([sentence.start, sentence.end])
+    else:
+        if args.verbose:
+            print("Parsing Subtitle file", args.srt)
 
-    # 3. Assign speaker labels
-    diarize_model = whisperx.DiarizationPipeline(use_auth_token=args.hf_auth_token,
-                                                 device=device)
 
-    # add min/max number of speakers if known
-    diarize_segments = diarize_model(audio)
-    # diarize_model(audio, min_speakers=min_speakers, max_speakers=max_speakers)
-
-    # result = whisperx.assign_word_speakers(diarize_segments, result)
-    if args.verbose:
-        print(diarize_segments)
-    # print(result["segments"]) # segments are now assigned speaker IDs
-
-    # delete model if low on GPU resources
-    del diarize_model
-    gc.collect()
-    torch.cuda.empty_cache()
-
-    window_list = []
-    for sentence in diarize_segments["segment"]:
-        window_list.append([sentence.start, sentence.end])
+        window_list = []
+        translated_text = []
+        with open(args.srt) as f:
+            for sub in srt.parse(f):
+                window_list.append([sub.start.total_seconds(),
+                                    sub.end.total_seconds()])
+                translated_text.append(sub.content)
 
     if args.verbose:
         print("Timestamp of each subtitle lines recorded.")
@@ -181,6 +199,7 @@ def main(args):
                os.path.join(temp_dir.name, "test_output"))
     if args.verbose:
         print("...done! <3")
+        print("AI listening original speech...")
 
     model = whisperx.load_model("medium",
                                 device,
@@ -206,16 +225,16 @@ def main(args):
         del model
         gc.collect()
 
-    translated_text = []
     if args.srt == None or len(args.srt) == 0:
+        translated_text = []
         translator = Translator()
 
         for text in text_list:
             outputs = translator.translate(text, args.target_language)
             translated_text.append(outputs.result)
-
-    else:
-        raise NotImplementedError("Sorry: not implemented yet!")
+  
+    if args.verbose:
+        print("AI dubbing...")
 
     # voice cloning
     for i, text in enumerate(text_list):
@@ -277,6 +296,8 @@ def main(args):
             del model
             gc.collect()
 
+    if args.verbose:
+        print("Post production, adjusting volume speed...")
     sound0 = AudioSegment.from_file(os.path.join(temp_dir.name, "vocals.wav"))
     sound1 = AudioSegment.from_file(os.path.join(temp_dir.name, "no_vocals.wav"))
     for i, timestamps in enumerate(window_list):
@@ -314,6 +335,8 @@ def main(args):
 
     sound1.export(os.path.join(temp_dir.name, "new-audio.wav"), format='wav')
 
+    if args.verbose:
+        print("Post production, render new video...")
     new_audioclip = AudioFileClip(os.path.join(temp_dir.name, "new-audio.wav"))
     videoclip = videoclip.set_audio(new_audioclip)
     videoclip.write_videofile(os.path.join(temp_dir.name, "new-video.mp4"))
@@ -325,7 +348,17 @@ def main(args):
 
     temp_dir.cleanup()
     if args.verbose:
-        print("Creating tmp dir", temp_dir.name)
+        print("Saved new video", output_path)
+        print("Clean up temporary files")
+        print("Quiting")
 
 if __name__ == '__main__':
+    print("If this is the first time you use this script,",
+          "it will automatically download all tools it needs to use.",
+          "This may take some time (depends on your network speed)...",
+          "Sit back and have some coffee~",
+          "And if your computer only equipped with CPU,"
+          "and your video is longer than five minutes =(",
+          "I would advise you to go outside and join a party while waiting =)",
+          sep="\n")
     main()
