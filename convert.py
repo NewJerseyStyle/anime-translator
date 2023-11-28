@@ -36,7 +36,7 @@ parser.add_argument("--whisperx_compute_type", help=("precicient for WhisperX in
                                                      "default float16, "
                                                      "reduce to float32 if on CPU. "
                                                      "you may change to \"int8\" "
-                                                     "if low on GPU mem (may reduce accuracy)")
+                                                     "if low on GPU mem (may reduce accuracy)"),
                     default="float16", type=str)
 # support only English, Chinese, and Japanese
 parser.add_argument("--target_language", help="target language to translate to",
