@@ -1,6 +1,8 @@
 # anime-translator
 Applying deep learning to translate animation and re-generate audio.
 
+> ⚠️ Please consider to use [voice-pro](https://github.com/abus-aikorea/voice-pro) instead
+
 Supported output languages:
 | Chinese (Mandarin) | Japanese | English |
 |-|-|-|
